@@ -58,6 +58,27 @@ func (u *undirected[K, T]) Vertex(hash K) (T, error) {
 	return vertex, nil
 }
 
+func (d *undirected[K, T]) RemoveVertex(hash K) error {
+	if _, ok := d.vertices[hash]; !ok {
+		return ErrVertexNotFound
+	}
+
+	for key, _ := range d.inEdges[hash] {
+		delete(d.outEdges[key], hash)
+	}
+	delete(d.inEdges, hash)
+
+	for key, _ := range d.outEdges[hash] {
+		delete(d.inEdges[key], hash)
+	}
+	delete(d.outEdges, hash)
+
+	delete(d.vertexProperties, hash)
+	delete(d.vertices, hash)
+
+	return nil
+}
+
 func (u *undirected[K, T]) VertexWithProperties(hash K) (T, VertexProperties, error) {
 	vertex, err := u.Vertex(hash)
 	if err != nil {

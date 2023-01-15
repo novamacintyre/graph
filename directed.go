@@ -60,6 +60,23 @@ func (d *directed[K, T]) Vertex(hash K) (T, error) {
 	return vertex, nil
 }
 
+func (d *directed[K, T]) RemoveVertex(hash K) error {
+	if _, ok := d.vertices[hash]; !ok {
+		return ErrVertexNotFound
+	}
+
+	delete(d.edges, hash)
+	for sourceHash, _ := range d.inEdges[hash] {
+		delete(d.edges[sourceHash], hash)
+	}
+	delete(d.inEdges, hash)
+	delete(d.outEdges, hash)
+	delete(d.vertexProperties, hash)
+	delete(d.vertices, hash)
+
+	return nil
+}
+
 func (d *directed[K, T]) VertexWithProperties(hash K) (T, VertexProperties, error) {
 	vertex, err := d.Vertex(hash)
 	if err != nil {

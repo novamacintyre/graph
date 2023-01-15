@@ -155,6 +155,76 @@ func TestDirected_Vertex(t *testing.T) {
 	}
 }
 
+func TestDirected_RemoveVertex(t *testing.T) {
+	tests := map[string]struct {
+		vertices       []int
+		edges          []Edge[int]
+		removeVertices []int
+		removeEdges    []Edge[int]
+		expectedError  error
+	}{
+		"remove isolated vertex": {
+			vertices: []int{1, 2, 3},
+			edges: []Edge[int]{
+				{Source: 2, Target: 3},
+			},
+			removeVertices: []int{1},
+		},
+		"remove connected vertex": {
+			vertices: []int{1, 2, 3, 4},
+			edges: []Edge[int]{
+				{Source: 1, Target: 2},
+				{Source: 3, Target: 1},
+				{Source: 2, Target: 3},
+			},
+			removeVertices: []int{1, 4},
+			removeEdges: []Edge[int]{
+				{Source: 1, Target: 2},
+				{Source: 3, Target: 1},
+			},
+		},
+		"remove non-existent vertex": {
+			vertices: []int{2, 3},
+			edges: []Edge[int]{
+				{Source: 2, Target: 3},
+			},
+			removeVertices: []int{1},
+			expectedError:  ErrVertexNotFound,
+		},
+	}
+
+	for name, test := range tests {
+		graph := New(IntHash, Directed())
+
+		for _, vertex := range test.vertices {
+			_ = graph.AddVertex(vertex)
+		}
+
+		for _, edge := range test.edges {
+			if err := graph.AddEdge(edge.Source, edge.Target, EdgeWeight(edge.Properties.Weight)); err != nil {
+				t.Fatalf("%s: failed to add edge: %s", name, err.Error())
+			}
+		}
+
+		for _, removeVertex := range test.removeVertices {
+			if err := graph.RemoveVertex(removeVertex); !errors.Is(err, test.expectedError) {
+				t.Errorf("%s: error expectancy doesn't match: expected %v, got %v", name, test.expectedError, err)
+			}
+			// After removing the vertex, verify that it can't be retrieved using Vertex anymore.
+			if _, err := graph.Vertex(removeVertex); err != ErrVertexNotFound {
+				t.Fatalf("%s: error expectancy doesn't match: expected %v, got %v", name, ErrVertexNotFound, err)
+			}
+		}
+
+		// Verify edges in removeEdges are removed
+		for _, edge := range test.removeEdges {
+			if _, err := graph.Edge(edge.Source, edge.Target); err != ErrEdgeNotFound {
+				t.Fatalf("%s: error expectancy doesn't match, expected %v, got %v", name, ErrEdgeNotFound, err)
+			}
+		}
+	}
+}
+
 func TestDirected_AddEdge(t *testing.T) {
 	tests := map[string]struct {
 		vertices      []int

@@ -31,6 +31,10 @@ type Graph[K comparable, T any] interface {
 	// Vertex returns the vertex with the given hash or ErrVertexNotFound if it doesn't exist.
 	Vertex(hash K) (T, error)
 
+	// RemoveVertex removes the vertex with the given hash and any edges it is a part of. If the vertex
+	// doesn't exist, ErrVertexNotFound will be returned.
+	RemoveVertex(hash K) error
+
 	// VertexWithProperties returns the vertex with the given hash along with its properties or
 	// ErrVertexNotFound if it doesn't exist.
 	VertexWithProperties(hash K) (T, VertexProperties, error)
